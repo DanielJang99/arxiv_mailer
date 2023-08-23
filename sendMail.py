@@ -6,28 +6,46 @@ from oauth2client import file, client, tools
 import argparse
 import base64
 from email.mime.text import MIMEText
-import sys
 import boto3
 
 flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
 SCOPES = "https://mail.google.com/"
-SECRET_FILE_PATH = os.environ["SECRET_FILE_PATH"]
-BUCKET_NAME = os.environ["BUCKET_NAME"]
-OBJECT_KEY = os.environ["SECRET_OBJECT_KEY"]
+RUNTIME_ENV = os.environ["RUNTIME_ENV"] if "RUNTIME_ENV" in os.environ else "LOCAL"
 APPLICATION_NAME = "arxivMailer"
 
 
+def get_oauth_store():
+    """Loads client credentials from a json file (client_secret.json)
+
+    For AWS Lambda runtime, the json file will be retrived from a S3 bucket. The bucket name and object key has to be specified as environment variables.
+
+    For local runtime, the file has to be saved in the current directory.
+
+    Returns:
+        Store object
+    """
+    if RUNTIME_ENV == "LOCAL":
+        wd = os.getcwd()
+        SECRET_FILE_PATH = os.path.join(wd, "client_secret.json")
+    else:
+        SECRET_FILE_PATH = os.environ["SECRET_FILE_PATH"]
+        BUCKET_NAME = os.environ["BUCKET_NAME"]
+        OBJECT_KEY = os.environ["SECRET_OBJECT_KEY"]
+        s3 = boto3.client("s3")
+        s3.download_file(BUCKET_NAME, OBJECT_KEY, SECRET_FILE_PATH)
+    store = file.Storage(SECRET_FILE_PATH)
+    return store
+
+
 def get_credentials():
-    """Gets valid user credentials from S3 storage.
+    """Gets valid user credentials.
 
     If the stored credentials are invalid, the OAuth2 flow is completed to obtain the new credentials.
 
     Returns:
         Obtained credential object.
     """
-    s3 = boto3.client("s3")
-    s3.download_file(BUCKET_NAME, OBJECT_KEY, SECRET_FILE_PATH)
-    store = file.Storage(SECRET_FILE_PATH)
+    store = get_oauth_store()
     try:
         credentials = store.get()
     except:
@@ -35,7 +53,6 @@ def get_credentials():
         flow.user_agent = APPLICATION_NAME
         if flags:
             credentials = tools.run_flow(flow, store, flags)
-        s3.upload_file(SECRET_FILE_PATH, BUCKET_NAME, OBJECT_KEY)
     return credentials
 
 
