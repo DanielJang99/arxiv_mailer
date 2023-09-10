@@ -1,4 +1,4 @@
-sender_mail_address = "hsdanjang@gmail.com"
-receiver_mail_address = "hsj276@nyu.edu"
+sender_mail_address = ""
+receiver_mail_address = ""
 
 feed_urls = ["http://arxiv.org/rss/cs.SE", "http://arxiv.org/rss/cs.DC"]
