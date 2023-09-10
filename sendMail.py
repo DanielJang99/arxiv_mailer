@@ -11,24 +11,25 @@ import boto3
 flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
 SCOPES = "https://mail.google.com/"
 RUNTIME_ENV = os.environ["RUNTIME_ENV"] if "RUNTIME_ENV" in os.environ else "LOCAL"
+SECRET_FILE_PATH = (
+    os.path.join(os.getcwd(), "client_secret.json")
+    if RUNTIME_ENV == "LOCAL"
+    else os.environ["SECRET_FILE_PATH"]
+)
 APPLICATION_NAME = "arxivMailer"
 
 
 def get_oauth_store():
     """Loads client credentials from a json file (client_secret.json)
 
-    For AWS Lambda runtime, the json file will be retrived from a S3 bucket. The bucket name and object key has to be specified as environment variables.
+    For AWS Lambda runtime, the json file will be retrieved from a S3 bucket. The bucket name and object key need to be specified as environment variables.
 
     For local runtime, the file has to be saved in the current directory.
 
     Returns:
         Store object
     """
-    if RUNTIME_ENV == "LOCAL":
-        wd = os.getcwd()
-        SECRET_FILE_PATH = os.path.join(wd, "client_secret.json")
-    else:
-        SECRET_FILE_PATH = os.environ["SECRET_FILE_PATH"]
+    if RUNTIME_ENV != "LOCAL":
         BUCKET_NAME = os.environ["BUCKET_NAME"]
         OBJECT_KEY = os.environ["SECRET_OBJECT_KEY"]
         s3 = boto3.client("s3")

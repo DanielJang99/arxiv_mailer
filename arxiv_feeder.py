@@ -58,7 +58,7 @@ def send_todays_arxiv(sender, to):
 
 
 def main():
-    send_todays_arxiv(sender=sender_mail_address, to=receiver_mail_address)
+    return send_todays_arxiv(sender=sender_mail_address, to=receiver_mail_address)
 
 
 if __name__ == "__main__":
