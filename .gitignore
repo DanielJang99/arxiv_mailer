@@ -4,4 +4,4 @@ __pycache__/*
 /venv
 client_secret.json
 /python 
-*.zip
+arxiv_mailer_lib.zip
